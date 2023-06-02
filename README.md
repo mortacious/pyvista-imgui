@@ -1,6 +1,6 @@
 # Pyvista-Imgui
 
-[![PyPi license](https://badgen.net/pypi/license/pip/)](https://pypi.org/project/pip/) [![PyPi version](https://badgen.net/pypi/v/pip/)](https://pypi.org/project/pip)
+[![PyPi license](https://badgen.net/pypi/license/pyvista-imgui/)](https://pypi.org/project/pyvista-imgui/) [![PyPi version](https://badgen.net/pypi/v/pyvista-imgui/)](https://pypi.org/project/pyvista-imgui/)
 
 `pyvista-imgui` is a small helper module for the [`pyvista`](https://github.com/pyvista/pyvista)-package to integrate it with the [imgui](https://github.com/ocornut/imgui)-library. 
 
@@ -10,7 +10,7 @@ It currently utilizes the bindings provided by [`imgui-bundle`](https://github.c
 
 This package is considered experimental at this moment, so expect issues.
 
-## Installation
+## Installation5
 
 To install this package using `pip` use:
 
