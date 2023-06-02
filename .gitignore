@@ -71,3 +71,4 @@ docs/external_examples.rst
 pyvista_imgui/_version.py
 
 *.whl
+*.ini

@@ -1,6 +1,6 @@
 import pyvista as pv
 import vtk
-from imgui_pyvista import ImguiPlotter
+from pyvista_imgui import ImguiPlotter
 from imgui_bundle import immapp, imgui, hello_imgui
 
 sphere = pv.Sphere()
@@ -33,4 +33,4 @@ def gui():
 runner_params.callbacks.show_gui = gui
 # IMPORTANT: hello_imgui has a special default window type, that prevets interaction when the Plotter is forced to the background. To prevent this, we disable it here.
 runner_params.imgui_window_params.default_imgui_window_type = hello_imgui.DefaultImGuiWindowType.no_default_window
-immapp.run(runner_params=runner_params, add_ons_params=addons)
+immapp.run(runner_params=runner_params)
