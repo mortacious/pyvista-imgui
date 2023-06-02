@@ -36,8 +36,8 @@ dynamic = ["version"]
 imgui-bundle = [
   'imgui-bundle'
 ]
-pyimgui = [
-  'imgui'
+imgui = [
+  'imgui[glfw]'
 ]
 
 [tool.setuptools_scm]
