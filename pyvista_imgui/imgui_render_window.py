@@ -1,6 +1,5 @@
 from .texture_render_window import VTKOpenGLTextureRenderWindow
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
-from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.vtkCommonCore import vtkCommand
 try:
     from imgui_bundle import imgui
@@ -32,7 +31,7 @@ class VTKImguiRenderWindowInteractor(object):
     """
     def __init__(self, 
                  border: bool = False) -> None:
-
+            
         self.border = border
         self.renwin = VTKOpenGLTextureRenderWindow(viewport_size=(0, 0))
 

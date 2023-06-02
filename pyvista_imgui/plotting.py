@@ -204,14 +204,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         if not glfw.init():
             raise ValueError("Could not initialize OpenGL context")
 
-        # OS X supports only forward-compatible core profiles from 3.2
-        #glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
-        #glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
-        #glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-
-        #glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, GL.GL_TRUE)
-
-        # Create a windowed mode window and its OpenGL context
+        # Create a window and its OpenGL context
         window = glfw.create_window(int(window_size[0]), int(window_size[1]), title or "ImguiPlotter", None, None)
         glfw.make_context_current(window)
 
