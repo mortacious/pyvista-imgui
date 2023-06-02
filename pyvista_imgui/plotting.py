@@ -101,6 +101,8 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
 
         """
         from pyvista.plotting.widgets import WidgetHelper
+        from pyvista.plotting.plotting import _ALL_PLOTTERS
+        
         # optionally run just prior to exiting the plotter
         if self._before_close_callback is not None:
             self._before_close_callback(self)
@@ -129,7 +131,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
 
         # Remove the global reference to this plotter unless building the
         # gallery to allow it to collect.
-        if not pyvista.BUILDING_GALLERY:
+        if not pv.BUILDING_GALLERY:
             if _ALL_PLOTTERS is not None:
                 _ALL_PLOTTERS.pop(self._id_name, None)
 
