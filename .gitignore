@@ -68,4 +68,6 @@ docs/external_examples.rst
 # vim
 *.swp
 
-pyvistaqt/_version.py
+pyvista_imgui/_version.py
+
+*.whl

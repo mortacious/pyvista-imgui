@@ -1,8 +1,47 @@
 [build-system]
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = 'setuptools.build_meta'
 
 [project]
+name = "pyvista-imgui"
+authors = [
+    {name = "Felix Igelbrink", email = "felix.igelbrink@dfki.de"},
+]
+description = 'Pyvista imgui integration'
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["vtk", "imgui", "plotting"]
+license = {text = "MIT"}
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Topic :: Scientific/Engineering :: Information Analysis',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX',
+    'Operating System :: MacOS',
+]
+dependencies = [
+    "pyvista>=0.39",
+    'vtk', # without version
+    'imgui-bundle',
+    'PyOpenGL',
+    'importlib-metadata; python_version>"3.8"',
+]
 dynamic = ["version"]
 
 [tool.setuptools_scm]
 write_to = "pyvista_imgui/_version.py"
+version_scheme = "release-branch-semver"
+
+[project.urls]
+"Bug Tracker" = 'https://github.com/mortacious/pyvista-imgui/issues'
+"Source Code" = 'https://github.com/mortacious/pyvista-imgui'
+
+[tool.setuptools.packages.find]
+include = [
+    'pyvista_imgui'
+]
