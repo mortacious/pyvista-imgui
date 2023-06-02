@@ -4,9 +4,9 @@
 
 `pyvista-imgui` is a small helper module for the [`pyvista`](https://github.com/pyvista/pyvista)-package to integrate it with the [imgui](https://github.com/ocornut/imgui)-library. 
 
-It integrates a fully interactive `pyvista`-Plotter as an imgui-widget, by utilizing VTK's `vtkGenericOpenGLRenderWindow` to first render the output into an OpenGL texture and displaying it as a regular imgui-Image widget.
+It integrates a fully interactive `pyvista`-Plotter as an imgui-widget, by utilizing VTK's `vtkGenericOpenGLRenderWindow` to first render the output into an OpenGL texture and displaying it as a regular imgui-image widget.
 
-It currently utilizes the bindings provided by [`imgui-bundle`](https://github.com/ocornut/imgui), but the integration of other imgui-bindings is planned for a future release.
+It currently utilizes either the bindings provided by [`imgui-bundle`](https://github.com/ocornut/imgui), or by [`pyimgui`](https://github.com/pyimgui/pyimgui/tree/master).
 
 This package is considered experimental at this moment, so expect issues.
 
@@ -15,15 +15,23 @@ This package is considered experimental at this moment, so expect issues.
 To install this package using `pip` use:
 
 ```bash
-pip install pyvista-imgui
+pip install pyvista-imgui[imgui-bundle]
 ```
+
+for the `imgui-bundle` bindings or:
+
+```bash
+pip install pyvista-imgui[imgui]
+```
+
+for the `pyimgui` bindings.
 
 Alternatively the installation from source is also possible with:
 
 ```bash
 git clone https://github.com/mortacious/pyvista-imgui
 cd pyvista-imgui
-pip install [-e] .
+pip install [-e] .[imgui-bundle / imgui] 
 ```
 
 ## Usage
@@ -42,7 +50,7 @@ plotter.add_mesh(sphere)
 plotter.show()
 ```
 
-Alternatively, an instance of `ImguiPlotter` can be integrated into an existing `imgui`-UI as a widget:
+Alternatively, an instance of `ImguiPlotter` can be integrated into an existing imgui-UI as a widget:
 
 ```py
 imgui.begin("Imgui Plotter")
