@@ -2,7 +2,15 @@ from .texture_render_window import VTKOpenGLTextureRenderWindow
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 from vtkmodules.vtkRenderingCore import vtkRenderer
 from vtkmodules.vtkCommonCore import vtkCommand
-from imgui_bundle import imgui
+try:
+    from imgui_bundle import imgui
+    _imgui_bundle = True
+except ImportError:
+    # fall back to the pyimgui package
+    import imgui
+    _imgui_bundle = False
+
+
 import typing as typ
 
 __all__ = ['VTKImguiRenderWindowInteractor']
@@ -44,6 +52,52 @@ class VTKImguiRenderWindowInteractor(object):
         else:
             raise AttributeError(self.__class__.__name__ +
                   " has no attribute named " + attr)
+        
+    def _render_imgui_bundle(self, size: typ.Optional[tuple[int, int]] = None):
+        if size is None:
+            # get the maximum available size
+            size = imgui.get_content_region_avail()
+            size = (size.x, size.y)
+
+        self.renwin.render(size)
+
+        # adjust the size of this interactor as well
+        self.interactor.SetSize(int(size[0]), int(size[1]))
+        # render the texture with the vtk output into an image
+        imgui.push_style_var(imgui.StyleVar_.window_padding, (0, 0))
+        # make the image unscrollable to ensure correct mouse behavior
+        no_scroll_flags = imgui.WindowFlags_.no_scrollbar | imgui.WindowFlags_.no_scroll_with_mouse
+        imgui.begin_child("##Viewport", size, self.border, no_scroll_flags)
+        imgui.image(self.renwin.texture_id, 
+                    imgui.get_content_region_avail(), 
+                    (0, 1), (1, 0))
+        # process the events of this widget
+        self.process_events()
+        imgui.end_child()
+        imgui.pop_style_var()
+
+    def _render_pyimgui(self, size: typ.Optional[tuple[int, int]] = None):
+        if size is None:
+            # get the maximum available size
+            size = imgui.get_content_region_available()
+            size = (size.x, size.y)
+
+        self.renwin.render(size)
+
+        # adjust the size of this interactor as well
+        self.interactor.SetSize(int(size[0]), int(size[1]))
+        imgui.push_style_var(imgui.STYLE_WINDOW_PADDING, (0, 0))
+        no_scroll_flags = imgui.WINDOW_NO_SCROLLBAR | imgui.WINDOW_NO_SCROLL_WITH_MOUSE
+        imgui.begin_child("##Viewport", size[0], size[1], self.border, no_scroll_flags)
+        image_size = imgui.get_content_region_available()
+        imgui.image(self.renwin.texture_id, 
+                    image_size.x, image_size.y,
+                    (0, 1), (1, 0))
+        # process the events of this widget
+        self.process_events()
+        imgui.end_child()
+        imgui.pop_style_var()
+
 
     def render(self, size: typ.Optional[tuple[int, int]] = None) -> None:
         """
@@ -57,33 +111,54 @@ class VTKImguiRenderWindowInteractor(object):
             the size of the result in the ui in pixels, 
             if None (default) the maximum available size is used.
         """
-        if size is None:
-            # get the maximum available size
-            size = imgui.get_content_region_avail()
-            size = (size.x, size.y)
+        if _imgui_bundle:
+            self._render_imgui_bundle(size)
+        else:
+            self._render_pyimgui(size)
 
-        self.renwin.render(size)
+    def _process_events_imgui_bundle(self, io):
+        if imgui.is_window_hovered():
+            if io.mouse_clicked[imgui.MouseButton_.left]:
+                self.interactor.InvokeEvent(vtkCommand.LeftButtonPressEvent)
+            elif io.mouse_clicked[imgui.MouseButton_.right]:
+                self.interactor.InvokeEvent(vtkCommand.RightButtonPressEvent)
+            elif io.mouse_clicked[imgui.MouseButton_.middle]:
+                self.interactor.InvokeEvent(vtkCommand.MiddleButtonPressEvent)
+            elif io.mouse_wheel > 0:
+                self.interactor.InvokeEvent(vtkCommand.MouseWheelForwardEvent)
+            elif io.mouse_wheel < 0:
+                self.interactor.InvokeEvent(vtkCommand.MouseWheelBackwardEvent)
 
-        # adjust the size of this interactor as well
-        viewport_size = self.renwin.viewport_size
-        self.interactor.SetSize(int(size[0]), int(size[1]))
+        if io.mouse_released[imgui.MouseButton_.left]:
+            self.interactor.InvokeEvent(vtkCommand.LeftButtonReleaseEvent)
+        elif io.mouse_released[imgui.MouseButton_.right]:
+            self.interactor.InvokeEvent(vtkCommand.RightButtonReleaseEvent)
+        elif io.mouse_released[imgui.MouseButton_.middle]:
+            self.interactor.InvokeEvent(vtkCommand.MiddleButtonReleaseEvent)
+        
+        self.interactor.InvokeEvent(vtkCommand.MouseMoveEvent)
 
-        # render the texture with the vtk output into an image
-        imgui.push_style_var(imgui.StyleVar_.window_padding, imgui.ImVec2(0, 0))
-        imgui.begin_child("##Viewport", size, self.border, self._no_scroll_flags())
-        imgui.image(self.renwin.texture_id, 
-                    imgui.get_content_region_avail(), 
-                    imgui.ImVec2(0, 1), imgui.ImVec2(1, 0))
-        # process the events of this widget
-        self.process_events()
-        imgui.end_child()
-        imgui.pop_style_var()
+    def _process_events_pyimgui(self, io) -> None:
+        if imgui.is_window_hovered():
+            if imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_LEFT):
+                self.interactor.InvokeEvent(vtkCommand.LeftButtonPressEvent)
+            elif imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_RIGHT):
+                self.interactor.InvokeEvent(vtkCommand.RightButtonPressEvent)
+            elif imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_MIDDLE):
+                self.interactor.InvokeEvent(vtkCommand.MiddleButtonPressEvent)
+            elif io.mouse_wheel > 0:
+                self.interactor.InvokeEvent(vtkCommand.MouseWheelForwardEvent)
+            elif io.mouse_wheel < 0:
+                self.interactor.InvokeEvent(vtkCommand.MouseWheelBackwardEvent)
 
-    def _no_scroll_flags(self) -> int:
-        """
-        Returns the imgui flags required for the rendererd texture to behave correctly.
-        """
-        return imgui.WindowFlags_.no_scrollbar | imgui.WindowFlags_.no_scroll_with_mouse
+        if imgui.is_mouse_released(imgui.MOUSE_BUTTON_LEFT):
+            self.interactor.InvokeEvent(vtkCommand.LeftButtonReleaseEvent)
+        elif imgui.is_mouse_released(imgui.MOUSE_BUTTON_RIGHT):
+            self.interactor.InvokeEvent(vtkCommand.RightButtonReleaseEvent)
+        elif imgui.is_mouse_released(imgui.MOUSE_BUTTON_MIDDLE):
+            self.interactor.InvokeEvent(vtkCommand.MiddleButtonReleaseEvent)
+        
+        self.interactor.InvokeEvent(vtkCommand.MouseMoveEvent)
 
     def process_events(self) -> None:
         """
@@ -106,23 +181,7 @@ class VTKImguiRenderWindowInteractor(object):
         
         self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, chr(0), 0, None)
 
-        if imgui.is_window_hovered():
-            if io.mouse_clicked[imgui.MouseButton_.left]:
-                self.interactor.InvokeEvent(vtkCommand.LeftButtonPressEvent)
-            elif io.mouse_clicked[imgui.MouseButton_.right]:
-                self.interactor.InvokeEvent(vtkCommand.RightButtonPressEvent)
-            elif io.mouse_clicked[imgui.MouseButton_.middle]:
-                self.interactor.InvokeEvent(vtkCommand.MiddleButtonPressEvent)
-            elif io.mouse_wheel > 0:
-                self.interactor.InvokeEvent(vtkCommand.MouseWheelForwardEvent)
-            elif io.mouse_wheel < 0:
-                self.interactor.InvokeEvent(vtkCommand.MouseWheelBackwardEvent)
-
-        if io.mouse_released[imgui.MouseButton_.left]:
-            self.interactor.InvokeEvent(vtkCommand.LeftButtonReleaseEvent)
-        elif io.mouse_released[imgui.MouseButton_.right]:
-            self.interactor.InvokeEvent(vtkCommand.RightButtonReleaseEvent)
-        elif io.mouse_released[imgui.MouseButton_.middle]:
-            self.interactor.InvokeEvent(vtkCommand.MiddleButtonReleaseEvent)
-        
-        self.interactor.InvokeEvent(vtkCommand.MouseMoveEvent)
+        if _imgui_bundle:
+            self._process_events_imgui_bundle(io)
+        else:
+            self._process_events_pyimgui(io)
