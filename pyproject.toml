@@ -27,11 +27,18 @@ classifiers = [
 dependencies = [
     "pyvista>=0.39",
     'vtk', # without version
-    'imgui-bundle',
     'PyOpenGL',
     'importlib-metadata; python_version>"3.8"',
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+imgui-bundle = [
+  'imgui-bundle'
+]
+imgui = [
+  'imgui[glfw]'
+]
 
 [tool.setuptools_scm]
 write_to = "pyvista_imgui/_version.py"
