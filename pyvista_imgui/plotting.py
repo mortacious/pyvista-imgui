@@ -1,16 +1,9 @@
 import pyvista as pv
-from .imgui_render_window import VTKImguiRenderWindowInteractor
+from .imgui_render_window import VTKImguiRenderWindowInteractor, BACKEND_IMGUI_BUNDLE, BACKEND_PYIMGUI
 from pyvista import global_theme
 from pyvista.plotting.render_window_interactor import RenderWindowInteractor
 import typing as typ
 from functools import wraps
-try:
-    from imgui_bundle import imgui
-    _imgui_bundle = True
-except ImportError:
-    # fall back to the pyimgui package
-    import imgui
-    _imgui_bundle = False
 
 __all__ = ['ImguiPlotter']
 
@@ -164,7 +157,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
             The size of the displayed window, by default (1400, 1080)
         """
 
-        from imgui_bundle import immapp, hello_imgui     
+        from imgui_bundle import immapp, hello_imgui, imgui     
         runner_params = hello_imgui.RunnerParams()
         runner_params.app_window_params.window_title = title or "ImguiPlotter"
         runner_params.app_window_params.window_geometry.size = window_size
@@ -199,6 +192,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         """
         import glfw
         import OpenGL.GL as GL
+        import imgui
         from imgui.integrations.glfw import GlfwRenderer
 
         if not glfw.init():
@@ -273,7 +267,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
             before_close_callback = global_theme._before_close_callback
         self._before_close_callback = before_close_callback
 
-        if _imgui_bundle:
+        if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
             self._show_imgui_bundle(title=title, window_size=window_size)
         else:
             self._show_pyimgui(title=title, window_size=window_size)

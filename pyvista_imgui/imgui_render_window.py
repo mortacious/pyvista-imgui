@@ -1,18 +1,26 @@
 from .texture_render_window import VTKOpenGLTextureRenderWindow
 from vtkmodules.vtkRenderingUI import vtkGenericRenderWindowInteractor
 from vtkmodules.vtkCommonCore import vtkCommand
+import enum
+
+BACKEND_IMGUI_BUNDLE = 0
+BACKEND_PYIMGUI = 1
+
 try:
     from imgui_bundle import imgui
-    _imgui_bundle = True
+    _imgui_backend = BACKEND_IMGUI_BUNDLE
 except ImportError:
     # fall back to the pyimgui package
-    import imgui
-    _imgui_bundle = False
+    try:
+        import imgui
+        _imgui_backend = BACKEND_PYIMGUI
+    except ImportError:
+        raise ImportError("Could not find a supported imgui package.")
 
 
 import typing as typ
 
-__all__ = ['VTKImguiRenderWindowInteractor']
+__all__ = ['VTKImguiRenderWindowInteractor', 'BACKEND_IMGUI_BUNDLE', 'BACKEND_PYIMGUI']
 
 
 class VTKImguiRenderWindowInteractor(object):
@@ -31,7 +39,7 @@ class VTKImguiRenderWindowInteractor(object):
     """
     def __init__(self, 
                  border: bool = False) -> None:
-            
+        self.imgui_backed = _imgui_backend
         self.border = border
         self.renwin = VTKOpenGLTextureRenderWindow(viewport_size=(0, 0))
 
@@ -110,7 +118,7 @@ class VTKImguiRenderWindowInteractor(object):
             the size of the result in the ui in pixels, 
             if None (default) the maximum available size is used.
         """
-        if _imgui_bundle:
+        if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
             self._render_imgui_bundle(size)
         else:
             self._render_pyimgui(size)
@@ -180,7 +188,7 @@ class VTKImguiRenderWindowInteractor(object):
         
         self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, chr(0), 0, None)
 
-        if _imgui_bundle:
+        if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
             self._process_events_imgui_bundle(io)
         else:
             self._process_events_pyimgui(io)
