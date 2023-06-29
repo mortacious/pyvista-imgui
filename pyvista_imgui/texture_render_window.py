@@ -120,7 +120,7 @@ class VTKOpenGLTextureRenderWindow(object):
         """
         # skip if nothing has changed
         if ((self.viewport_size[0] == new_size[0] and self.viewport_size[1] == new_size[1]) or 
-            new_size[0] <= 0 or new_size[0] <= 0) and not self._first_render:
+            new_size[0] <= 0 or new_size[1] <= 0) and not self._first_render:
             return
 
         self.viewport_size = new_size
