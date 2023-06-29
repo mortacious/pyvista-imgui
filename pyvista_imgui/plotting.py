@@ -146,6 +146,8 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
             if _ALL_PLOTTERS is not None:
                 _ALL_PLOTTERS.pop(self._id_name, None)
 
+        VTKImguiRenderWindowInteractor.close(self)
+
         # this helps managing closed plotters
         self._closed = True 
 
@@ -176,12 +178,16 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         kwargs: Exists to ensure compatiblity with the BasePlotter interface. 
                 Any additional keywords are ignored for this plotter.
         """
+        if self._closed:
+            raise ValueError("Attempt to re-open a closed plotter")
+        
         if before_close_callback is None:
             before_close_callback = global_theme._before_close_callback
         self._before_close_callback = before_close_callback
 
         def _show():
             self.imgui_backend.show(title=self.title, window_size=window_size)
+            self.close()
 
         if self._background:
             from threading import Thread

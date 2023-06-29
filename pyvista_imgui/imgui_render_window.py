@@ -81,6 +81,9 @@ class VTKImguiRenderWindowInteractor(object):
         # do not render unless explicitly requested, as imgui has control over the event loop
         self.interactor.EnableRenderOff()
         self.renwin.SetInteractor(self.interactor)
+
+    def close(self):
+        self.renwin.close()
     
     def __getattr__(self, attr):
         """

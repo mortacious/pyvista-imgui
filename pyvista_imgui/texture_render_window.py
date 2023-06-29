@@ -64,12 +64,17 @@ class VTKOpenGLTextureRenderWindow(object):
         self.render_window.SetFrameBlitModeToNoBlit()
 
     def __del__(self) -> None:
+        self.close()
+
+
+    def close(self):
         if self._tex:
             try:
                 glDeleteTextures(1, [self._tex])
             except:
                 pass # homehow OpenGL sometimes throws errors on shutdown so just catch them here for now
-
+        self._first_render = True
+        
     @property
     def texture_id(self) -> typ.Optional[int]:
         """
