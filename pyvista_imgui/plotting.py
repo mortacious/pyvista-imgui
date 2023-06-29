@@ -32,6 +32,9 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         Enable point smoothing, by default False
     polygon_smoothing, optional
         Enable polygon smoothing, by default False
+    background, optional
+        Spawn the viewer in a background thread to allow the main python interpreter to continue. 
+        Only works when calling 'show'
     """
 
     def __init__(self, 
@@ -39,6 +42,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
                  line_smoothing: bool = False,
                  point_smoothing: bool = False,
                  polygon_smoothing: bool = False,
+                 background: bool = False,
                  **kwargs):
 
         # imgui has it's own border functionality so ignore the vtk one
@@ -68,6 +72,10 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
 
         self._setup_interactor()
 
+        self._background = background
+        self._thread = None
+
+        self._app = None
         # Set some private attributes that let BasePlotter know
         # that this is safely rendering
         self._first_time = False  # Crucial!
@@ -267,7 +275,15 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
             before_close_callback = global_theme._before_close_callback
         self._before_close_callback = before_close_callback
 
-        if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
-            self._show_imgui_bundle(title=title, window_size=window_size)
+        def _show():
+            if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
+                self._show_imgui_bundle(title=title, window_size=window_size)
+            else:
+                self._show_pyimgui(title=title, window_size=window_size)
+        if self._background:
+            from threading import Thread
+            self._thread = Thread(target=_show)
+            self._thread.start()
         else:
-            self._show_pyimgui(title=title, window_size=window_size)
+            _show()
+    
