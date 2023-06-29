@@ -298,6 +298,7 @@ class VTKImguiRenderWindowInteractor(object):
         self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, chr(0), repeat, None)
 
         if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
-            self._process_events_imgui_bundle(io, xpos, ypos, ctrl, shift)
+            self._process_events_imgui_bundle(io)
+            self._process_keyboard_events_imgui_bundle(xpos, ypos, ctrl, shift)
         else:
             self._process_events_pyimgui(io, xpos, ypos, ctrl, shift)
