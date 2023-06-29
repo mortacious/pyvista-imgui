@@ -9,6 +9,86 @@ BACKEND_PYIMGUI = 1
 try:
     from imgui_bundle import imgui
     _imgui_backend = BACKEND_IMGUI_BUNDLE
+
+    _Key = imgui.Key
+    _keysyms = {
+        _Key.backspace: ('BackSpace', None),
+        _Key.tab: ('Tab', None),
+        _Key.enter: ('Return', None),
+        _Key.keypad_enter: ('Return', None),
+        _Key.left_shift: ('Shift_L', None),
+        _Key.left_ctrl: ('Control_L', None),
+        _Key.left_alt: ('Alt_L', None),
+        _Key.pause: ('Pause', None),
+        _Key.caps_lock: ('Caps_Lock', None),
+        _Key.escape: ('Escape', None),
+        _Key.space: ('space', ' '),
+        # Key.Key_Prior : 'Prior',
+        # Key.Key_Next : 'Next',
+        _Key.end: ('End', None),
+        _Key.home: ('Home', None),
+        _Key.left_arrow: ('Left', None),
+        _Key.up_arrow: ('Up', None),
+        _Key.right_arrow: ('Right', None),
+        _Key.down_arrow: ('Down', None),
+        _Key.insert: ('Insert', None),
+        _Key.delete: ('Delete', None),
+        _Key._0: ('0', '0'),
+        _Key._1: ('1', '1'),
+        _Key._2: ('2', '2'),
+        _Key._3: ('3', '3'),
+        _Key._4: ('4', '4'),
+        _Key._5: ('5', '5'),
+        _Key._6: ('6', '6'),
+        _Key._7: ('7', '7'),
+        _Key._8: ('8', '8'),
+        _Key._9: ('9', '9'),
+        _Key.a: ('a', 'a'),
+        _Key.b: ('b', 'b'),
+        _Key.c: ('c', 'c'),
+        _Key.d: ('d', 'd'),
+        _Key.e: ('e', 'e'),
+        _Key.f: ('f', 'f'),
+        _Key.g: ('g', 'g'),
+        _Key.h: ('h', 'h'),
+        _Key.i: ('i', 'i'),
+        _Key.j: ('j', 'j'),
+        _Key.k: ('k', 'k'),
+        _Key.l: ('l', 'l'),
+        _Key.m: ('m', 'm'),
+        _Key.n: ('n', 'n'),
+        _Key.o: ('o', 'o'),
+        _Key.p: ('p', 'p'),
+        _Key.q: ('q', 'q'),
+        _Key.r: ('r', 'r'),
+        _Key.s: ('s', 's'),
+        _Key.t: ('t', 't'),
+        _Key.u: ('u', 'u'),
+        _Key.v: ('v', 'v'),
+        _Key.w: ('w', 'w'),
+        _Key.x: ('x', 'x'),
+        _Key.y: ('y', 'y'),
+        _Key.z: ('z', 'z'),
+        _Key.keypad_add: 'plus', '+'),
+        _Key.minus: 'minus', '-'),
+        _Key.period: 'period', '~'),
+        _Key.slash: 'slash', '/'),
+        _Key.f1: 'F1', None),
+        _Key.f2: 'F2', None),
+        _Key.f3: 'F3', None),
+        _Key.f4: 'F4', None),
+        _Key.f5: 'F5', None),
+        _Key.f6: 'F6', None),
+        _Key.f7: 'F7', None),
+        _Key.f8: 'F8', None),
+        _Key.f9: 'F9', None),
+        _Key.f10: 'F10', None),
+        _Key.f11: 'F11', None),
+        _Key.f12: 'F12', None),
+        _Key.num_lock: 'Num_Lock', None),
+        _Key.scroll_lock: 'Scroll_Lock', None),
+    }
+
 except ImportError:
     # fall back to the pyimgui package
     try:
@@ -21,6 +101,8 @@ except ImportError:
 import typing as typ
 
 __all__ = ['VTKImguiRenderWindowInteractor', 'BACKEND_IMGUI_BUNDLE', 'BACKEND_PYIMGUI']
+
+
 
 
 class VTKImguiRenderWindowInteractor(object):
@@ -145,7 +227,31 @@ class VTKImguiRenderWindowInteractor(object):
         
         self.interactor.InvokeEvent(vtkCommand.MouseMoveEvent)
 
-    def _process_events_pyimgui(self, io) -> None:
+    def _process_keyboard_events_imgui_bundle(self, xpos, ypos, ctrl, shift):
+        if imgui.is_window_hovered():
+            key_start = imgui.Key.named_key_begin.value
+            key_end = imgui.Key.named_key_end.value
+            
+            # for each valid key check if it's state changed and emit the appropriate vtk event
+            for k in range(key_start, key_end):
+                k = imgui.Key(k)
+                if imgui.is_key_pressed(k) or imgui.is_key_released():
+                    try:
+                        keysym, keychar = _keysyms[k]
+                    except (KeyError):
+                        keysym = None
+                        keychar = None
+
+                    keychar = keychar or '\0'
+                     
+                    self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, keychar, 0, keysym)
+                    if imgui.is_key_pressed():
+                        self.interactor.KeyPressEvent()
+                    else:
+                        self.interactor.KeyReleaseEvent()
+
+
+    def _process_events_pyimgui(self, io, xpos, ypos, ctrl, shift) -> None:
         if imgui.is_window_hovered():
             if imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_LEFT):
                 self.interactor.InvokeEvent(vtkCommand.LeftButtonPressEvent)
@@ -184,11 +290,14 @@ class VTKImguiRenderWindowInteractor(object):
 
         ctrl = io.key_ctrl
         shift = io.key_shift
-        #dclick = io.mouse_double_clicked[0] or io.mouse_double_clicked[1] or io.mouse_double_clicked[2]
         
-        self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, chr(0), 0, None)
+        repeat = 0
+        if io.mouse_double_clicked[0] or io.mouse_double_clicked[1] or io.mouse_double_clicked[2]:
+            repeat = 1
+
+        self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, chr(0), repeat, None)
 
         if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
-            self._process_events_imgui_bundle(io)
+            self._process_events_imgui_bundle(io, xpos, ypos, ctrl, shift)
         else:
-            self._process_events_pyimgui(io)
+            self._process_events_pyimgui(io, xpos, ypos, ctrl, shift)
