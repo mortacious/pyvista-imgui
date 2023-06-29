@@ -38,6 +38,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
     """
 
     def __init__(self, 
+                 title=None,
                  multi_samples: int = None,
                  line_smoothing: bool = False,
                  point_smoothing: bool = False,
@@ -55,6 +56,8 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
             multi_samples = global_theme.multi_samples
 
         self.renwin.SetMultiSamples(multi_samples)
+
+        self.title = title or "ImguiPlotter"
         if line_smoothing:
             self.renwin.LineSmoothingOn()
         if point_smoothing:
@@ -169,6 +172,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
 
         from imgui_bundle import immapp, hello_imgui, imgui     
         runner_params = hello_imgui.RunnerParams()
+        print("title", title)
         runner_params.app_window_params.window_title = title or "ImguiPlotter"
         runner_params.app_window_params.window_geometry.size = window_size
         runner_params.imgui_window_params.show_status_bar = True
@@ -252,7 +256,6 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         glfw.terminate()
 
     def show(self, 
-             title: typ.Optional[str] = None, 
              window_size: tuple[int, int] = (1400, 1080),
              before_close_callback: typ.Optional[typ.Callable] = None,
             **kwargs):
@@ -264,8 +267,6 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
 
         Parameters
         ----------
-        title, optional
-            The title to use for the standalone window. Defaults to None to use the default title.
         window_size, optional
             The window size. Defaults to (1400, 1080).
         before_close_callback, optional
@@ -279,9 +280,9 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
 
         def _show():
             if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
-                self._show_imgui_bundle(title=title, window_size=window_size)
+                self._show_imgui_bundle(title=self.title, window_size=window_size)
             else:
-                self._show_pyimgui(title=title, window_size=window_size)
+                self._show_pyimgui(title=self.title, window_size=window_size)
         if self._background:
             from threading import Thread
             self._thread = Thread(target=_show)
