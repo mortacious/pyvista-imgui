@@ -44,52 +44,25 @@ class RendererBackendPyImgui(RendererBackend):
 
     def _process_mouse_events(self, io):
         if imgui.is_window_hovered():
-            if io.mouse_clicked[imgui.MouseButton_.left]:
+            if imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_LEFT):
                 self.interactor.InvokeEvent(vtkCommand.LeftButtonPressEvent)
-            elif io.mouse_clicked[imgui.MouseButton_.right]:
+            elif imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_RIGHT):
                 self.interactor.InvokeEvent(vtkCommand.RightButtonPressEvent)
-            elif io.mouse_clicked[imgui.MouseButton_.middle]:
+            elif imgui.is_mouse_clicked(imgui.MOUSE_BUTTON_MIDDLE):
                 self.interactor.InvokeEvent(vtkCommand.MiddleButtonPressEvent)
             elif io.mouse_wheel > 0:
                 self.interactor.InvokeEvent(vtkCommand.MouseWheelForwardEvent)
             elif io.mouse_wheel < 0:
                 self.interactor.InvokeEvent(vtkCommand.MouseWheelBackwardEvent)
 
-        if io.mouse_released[imgui.MouseButton_.left]:
+        if imgui.is_mouse_released(imgui.MOUSE_BUTTON_LEFT):
             self.interactor.InvokeEvent(vtkCommand.LeftButtonReleaseEvent)
-        elif io.mouse_released[imgui.MouseButton_.right]:
+        elif imgui.is_mouse_released(imgui.MOUSE_BUTTON_RIGHT):
             self.interactor.InvokeEvent(vtkCommand.RightButtonReleaseEvent)
-        elif io.mouse_released[imgui.MouseButton_.middle]:
+        elif imgui.is_mouse_released(imgui.MOUSE_BUTTON_MIDDLE):
             self.interactor.InvokeEvent(vtkCommand.MiddleButtonReleaseEvent)
         
         self.interactor.InvokeEvent(vtkCommand.MouseMoveEvent)
-
-    def _process_keyboard_events(self, xpos, ypos, ctrl, shift):
-        if imgui.is_window_hovered():
-            key_start = imgui.Key.named_key_begin.value
-            key_end = imgui.Key.named_key_end.value
-            
-            # for each valid key check if it's state changed and emit the appropriate vtk event
-            for k in range(key_start, key_end):
-                k = imgui.Key(k)
-                if k in _ignore_keys:
-                    continue
-
-                if imgui.is_key_pressed(k) or imgui.is_key_released(k):
-                    try:
-                        keysym, keychar = _keysyms[k]
-                    except (KeyError):
-                        keysym = None
-                        keychar = None
-
-                    keychar = keychar or '\0'
-
-                    self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, keychar, 0, keysym)
-                    if imgui.is_key_pressed(k):
-                        self.interactor.KeyPressEvent()
-                        self.interactor.CharEvent()
-                    else:
-                        self.interactor.KeyReleaseEvent()
 
     def process_events(self):
         """
