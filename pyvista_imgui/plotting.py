@@ -1,5 +1,5 @@
 import pyvista as pv
-from .imgui_render_window import VTKImguiRenderWindowInteractor, BACKEND_IMGUI_BUNDLE, BACKEND_PYIMGUI
+from .imgui_render_window import VTKImguiRenderWindowInteractor
 from pyvista import global_theme
 from pyvista.plotting.render_window_interactor import RenderWindowInteractor
 import typing as typ
@@ -44,12 +44,13 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
                  point_smoothing: bool = False,
                  polygon_smoothing: bool = False,
                  background: bool = False,
+                 backend: typ.Optional[str] = None,
                  **kwargs):
 
         # imgui has it's own border functionality so ignore the vtk one
         border = kwargs.pop("border", False)
 
-        VTKImguiRenderWindowInteractor.__init__(self, border=border)
+        VTKImguiRenderWindowInteractor.__init__(self, border=border, backend=backend)
         pv.BasePlotter.__init__(self, **kwargs)
 
         if multi_samples is None:
@@ -156,105 +157,6 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         kwargs["render"] = False # never render as this is not controlled by vtk any more
         pv.BasePlotter.add_actor(self, *args, **kwargs)
 
-    def _show_imgui_bundle(self, 
-                           title: typ.Optional[str] = None, 
-                           window_size: tuple[int, int] = (1400, 1080)):
-        """
-        show method for the imgui-bundle package.
-
-        Parameters
-        ----------
-        title, optional
-            The title of the window, if None, a default title is used.
-        window_size, optional
-            The size of the displayed window, by default (1400, 1080)
-        """
-
-        from imgui_bundle import immapp, hello_imgui, imgui     
-        runner_params = hello_imgui.RunnerParams()
-        print("title", title)
-        runner_params.app_window_params.window_title = title or "ImguiPlotter"
-        runner_params.app_window_params.window_geometry.size = window_size
-        runner_params.imgui_window_params.show_status_bar = True
-
-        def gui():
-            hello_imgui.apply_theme(hello_imgui.ImGuiTheme_.imgui_colors_dark)
-            vec = imgui.get_main_viewport().pos
-            imgui.set_next_window_pos(vec, imgui.Cond_.once)
-            imgui.set_next_window_size(imgui.get_main_viewport().size)
-            imgui.set_next_window_bg_alpha(1.0)
-            imgui.begin("Vtk Viewer", flags=imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_decoration | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move)
-            self.render()
-            imgui.end()
-
-        runner_params.callbacks.show_gui = gui
-        runner_params.imgui_window_params.default_imgui_window_type = hello_imgui.DefaultImGuiWindowType.no_default_window
-        immapp.run(runner_params=runner_params)
-
-    def _show_pyimgui(self,
-                      title: typ.Optional[str] = None, 
-                      window_size: tuple[int, int] = (1400, 1080)):
-        """
-        Show method for the pyimgui package
-
-        Parameters
-        ----------
-        title, optional
-            The title of the window, if None, a default title is used.
-        window_size, optional
-            The size of the displayed window, by default (1400, 1080)
-        """
-        import glfw
-        import OpenGL.GL as GL
-        import imgui
-        from imgui.integrations.glfw import GlfwRenderer
-
-        if not glfw.init():
-            raise ValueError("Could not initialize OpenGL context")
-
-        # Create a window and its OpenGL context
-        window = glfw.create_window(int(window_size[0]), int(window_size[1]), title or "ImguiPlotter", None, None)
-        glfw.make_context_current(window)
-
-        if not window:
-            glfw.terminate()
-            raise ValueError("Could not initialize Window")
-        
-        background_color = (0.0, 0.0, 0.0, 1.0)
-        GL.glClearColor(*background_color)
-        imgui.create_context()
-
-        impl = GlfwRenderer(window)
-
-        while not glfw.window_should_close(window):
-            glfw.poll_events()
-            impl.process_inputs()
-            imgui.new_frame()
-            vec = imgui.get_main_viewport().pos
-            imgui.set_next_window_position(vec.x, vec.y, imgui.ONCE)
-            size = imgui.get_main_viewport().size
-            imgui.set_next_window_size(size.x, size.y)
-            imgui.set_next_window_bg_alpha(1.0)
-            window_flags = imgui.WINDOW_NO_BRING_TO_FRONT_ON_FOCUS | \
-                           imgui.WINDOW_NO_TITLE_BAR | \
-                           imgui.WINDOW_NO_DECORATION | \
-                           imgui.WINDOW_NO_RESIZE | \
-                           imgui.WINDOW_NO_MOVE
-                                 
-            imgui.begin("Vtk Viewer", flags=window_flags)
-            self.render()
-            imgui.end()
-
-            imgui.render()
-
-            GL.glClearColor(*background_color)
-            GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-            impl.render(imgui.get_draw_data())
-            glfw.swap_buffers(window)
-
-        impl.shutdown()
-        glfw.terminate()
-
     def show(self, 
              window_size: tuple[int, int] = (1400, 1080),
              before_close_callback: typ.Optional[typ.Callable] = None,
@@ -279,10 +181,8 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         self._before_close_callback = before_close_callback
 
         def _show():
-            if self.imgui_backed == BACKEND_IMGUI_BUNDLE:
-                self._show_imgui_bundle(title=self.title, window_size=window_size)
-            else:
-                self._show_pyimgui(title=self.title, window_size=window_size)
+            self.imgui_backend.show(title=self.title, window_size=window_size)
+
         if self._background:
             from threading import Thread
             self._thread = Thread(target=_show)
