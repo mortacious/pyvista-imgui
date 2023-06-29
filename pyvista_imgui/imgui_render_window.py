@@ -69,24 +69,33 @@ try:
         _Key.x: ('x', 'x'),
         _Key.y: ('y', 'y'),
         _Key.z: ('z', 'z'),
-        _Key.keypad_add: 'plus', '+'),
-        _Key.minus: 'minus', '-'),
-        _Key.period: 'period', '~'),
-        _Key.slash: 'slash', '/'),
-        _Key.f1: 'F1', None),
-        _Key.f2: 'F2', None),
-        _Key.f3: 'F3', None),
-        _Key.f4: 'F4', None),
-        _Key.f5: 'F5', None),
-        _Key.f6: 'F6', None),
-        _Key.f7: 'F7', None),
-        _Key.f8: 'F8', None),
-        _Key.f9: 'F9', None),
-        _Key.f10: 'F10', None),
-        _Key.f11: 'F11', None),
-        _Key.f12: 'F12', None),
-        _Key.num_lock: 'Num_Lock', None),
-        _Key.scroll_lock: 'Scroll_Lock', None),
+        _Key.keypad_add: ('plus', '+'),
+        _Key.right_bracket: ('plus', '+'),
+        _Key.minus: ('minus', '-'),
+        _Key.period: ('period', '~'),
+        _Key.slash: ('slash', '/'),
+        _Key.f1: ('F1', None),
+        _Key.f2: ('F2', None),
+        _Key.f3: ('F3', None),
+        _Key.f4: ('F4', None),
+        _Key.f5: ('F5', None),
+        _Key.f6: ('F6', None),
+        _Key.f7: ('F7', None),
+        _Key.f8: ('F8', None),
+        _Key.f9: ('F9', None),
+        _Key.f10: ('F10', None),
+        _Key.f11: ('F11', None),
+        _Key.f12: ('F12', None),
+        _Key.num_lock: ('Num_Lock', None),
+        _Key.scroll_lock: ('Scroll_Lock', None),
+    }
+
+    _ignore_keys = {
+        _Key.mouse_left,
+        _Key.mouse_right,
+        _Key.mouse_middle,
+        _Key.mouse_wheel_x,
+        _Key.mouse_wheel_y,
     }
 
 except ImportError:
@@ -152,6 +161,8 @@ class VTKImguiRenderWindowInteractor(object):
 
         # adjust the size of this interactor as well
         self.interactor.SetSize(int(size[0]), int(size[1]))
+        self.interactor.ConfigureEvent()
+
         # render the texture with the vtk output into an image
         imgui.push_style_var(imgui.StyleVar_.window_padding, (0, 0))
         # make the image unscrollable to ensure correct mouse behavior
@@ -161,7 +172,7 @@ class VTKImguiRenderWindowInteractor(object):
                     imgui.get_content_region_avail(), 
                     (0, 1), (1, 0))
         # process the events of this widget
-        self.process_events()
+        self.process_events(size)
         imgui.end_child()
         imgui.pop_style_var()
 
@@ -183,7 +194,7 @@ class VTKImguiRenderWindowInteractor(object):
                     image_size.x, image_size.y,
                     (0, 1), (1, 0))
         # process the events of this widget
-        self.process_events()
+        self.process_events(size)
         imgui.end_child()
         imgui.pop_style_var()
 
@@ -235,7 +246,10 @@ class VTKImguiRenderWindowInteractor(object):
             # for each valid key check if it's state changed and emit the appropriate vtk event
             for k in range(key_start, key_end):
                 k = imgui.Key(k)
-                if imgui.is_key_pressed(k) or imgui.is_key_released():
+                if k in _ignore_keys:
+                    continue
+
+                if imgui.is_key_pressed(k) or imgui.is_key_released(k):
                     try:
                         keysym, keychar = _keysyms[k]
                     except (KeyError):
@@ -243,11 +257,14 @@ class VTKImguiRenderWindowInteractor(object):
                         keychar = None
 
                     keychar = keychar or '\0'
-                     
+
                     self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, keychar, 0, keysym)
-                    if imgui.is_key_pressed():
+                    if imgui.is_key_pressed(k):
+                        #print("pressed key", k, keychar, keysym)
                         self.interactor.KeyPressEvent()
+                        self.interactor.CharEvent()
                     else:
+                        #print("released key", k, keychar, keysym)
                         self.interactor.KeyReleaseEvent()
 
 
@@ -273,7 +290,7 @@ class VTKImguiRenderWindowInteractor(object):
         
         self.interactor.InvokeEvent(vtkCommand.MouseMoveEvent)
 
-    def process_events(self) -> None:
+    def process_events(self, size) -> None:
         """
         Handle events by passing them to the underlying vtk interactor. This method is called automatically
         on rendering.
@@ -295,6 +312,9 @@ class VTKImguiRenderWindowInteractor(object):
         if io.mouse_double_clicked[0] or io.mouse_double_clicked[1] or io.mouse_double_clicked[2]:
             repeat = 1
 
+        if xpos < 0 or ypos < 0:
+            return 
+        
         self.interactor.SetEventInformationFlipY(xpos, ypos, ctrl, shift, chr(0), repeat, None)
 
         if self.imgui_backed == BACKEND_IMGUI_BUNDLE:

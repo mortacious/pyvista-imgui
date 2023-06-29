@@ -89,6 +89,8 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         )  # slows window update?
         self.iren.initialize()
         self.enable_trackball_style()
+        self.iren.add_observer("KeyPressEvent", self.key_press_event)
+
 
     def __del__(self):
         # We have to check here if the plotter was only partially initialized
