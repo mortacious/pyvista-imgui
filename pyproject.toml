@@ -27,7 +27,6 @@ classifiers = [
 dependencies = [
     "pyvista>=0.39",
     'vtk', # without version
-    'PyOpenGL',
     'importlib-metadata; python_version>"3.8"',
 ]
 dynamic = ["version"]

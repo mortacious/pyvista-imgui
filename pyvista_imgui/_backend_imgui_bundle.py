@@ -111,13 +111,12 @@ class RendererBackendImguiBundle(RendererBackend):
             raise ModuleNotFoundError(f"{self.__class__.__name__} requires the 'imgui_bundle' package.")
         super().__init__(interactor, render_window, border=border)
 
-    def render(self, size: tuple[int, int] | None = None):
-        if size is None:
-            # get the maximum available size
-            size = imgui.get_content_region_avail()
-            size = (size.x, size.y)
-
-        self.render_window.render(size)
+    def render(self, size: typ.Optional[tuple[int, int]] = None):
+        # get the maximum available size
+        size = size or imgui.get_content_region_avail()
+        size = (size.x, size.y)
+        self.render_window.size = size
+        self.render_window.render()
 
         # adjust the size of this interactor as well
         self.interactor.SetSize(int(size[0]), int(size[1]))
@@ -248,4 +247,5 @@ class RendererBackendImguiBundle(RendererBackend):
         runner_params.callbacks.show_gui = gui
         runner_params.imgui_window_params.default_imgui_window_type = hello_imgui.DefaultImGuiWindowType.no_default_window
         immapp.run(runner_params=runner_params)
+        
       
