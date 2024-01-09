@@ -23,7 +23,7 @@ class RendererBackend(object):
         self.border = border
 
     @abstractmethod
-    def render(self, size: typ.Optional[tuple[int, int]] = None):
+    def render(self) -> None:
         pass
 
     @abstractmethod
@@ -32,7 +32,7 @@ class RendererBackend(object):
 
     @abstractmethod
     def show(title: typ.Optional[str] = None, 
-             window_size: tuple[int, int] = (1400, 1080)):
+             window_size = None):
         pass
 
     @classmethod
@@ -64,30 +64,27 @@ class VTKImguiRenderWindowInteractor(object):
     Parameters
     ----------
     border, optional
-        display a border around the created imgui widget, by default False
+        display a border around the created imgui widget, False by default.
     """
     def __init__(self, 
                  border: bool = False,
-                 backend = None) -> None:
-        if backend is None:
-            backend = 'imgui_bundle'
+                 imgui_backend = None) -> None:
+        if imgui_backend is None:
+            imgui_backend = 'imgui_bundle'
 
-        self.renwin = VTKOpenGLTextureRenderWindow(viewport_size=(0, 0))
+        self.ren_win = VTKOpenGLTextureRenderWindow()
 
         self.interactor = vtkGenericRenderWindowInteractor()
 
-        self.imgui_backend = RendererBackend.from_name(backend, self.interactor, self.renwin)
+        self.imgui_backend = RendererBackend.from_name(imgui_backend, self.interactor, self.ren_win, border=border)
 
         # do not render unless explicitly requested, as imgui has control over the event loop
         self.interactor.EnableRenderOff()
-        self.renwin.SetInteractor(self.interactor)
-
-    def close(self):
-        self.renwin.close()
+        self.ren_win.SetInteractor(self.interactor)
     
     def __getattr__(self, attr):
         """
-        Makes the object behave like a vtkRenderWindowInteractor
+        Makes this object behave like a vtkRenderWindowInteractor
         """
         if attr == '__vtk__':
             return lambda t=self.interactor: t
@@ -97,8 +94,7 @@ class VTKImguiRenderWindowInteractor(object):
             raise AttributeError(self.__class__.__name__ +
                   " has no attribute named " + attr)
 
-
-    def render(self, size: typ.Optional[tuple[int, int]] = None) -> None:
+    def render_imgui(self, size: typ.Optional[tuple[int, int]] = None) -> None:
         """
         Renders the contents of the internal render window into an existing imgui ui 
         with the specified size. This method should be called when building 

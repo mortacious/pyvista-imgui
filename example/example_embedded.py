@@ -24,7 +24,7 @@ def gui():
     imgui.begin("Imgui Plotter", flags=imgui.WindowFlags_.no_bring_to_front_on_focus | imgui.WindowFlags_.no_title_bar | imgui.WindowFlags_.no_decoration | imgui.WindowFlags_.no_resize | imgui.WindowFlags_.no_move)
 
     # render the plotter's contents here
-    plotter.render()
+    plotter.render_imgui()
 
     imgui.end()
     imgui.show_demo_window()

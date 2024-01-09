@@ -20,13 +20,13 @@ class RendererBackendPyImgui(RendererBackend):
             raise ModuleNotFoundError(f"{self.__class__.__name__} requires the 'pyimgui' package.")
         super().__init__(interactor, render_window, border=border)
 
-    def render(self, size: tuple[int, int] | None = None):
-        if size is None:
-            # get the maximum available size
-            size = imgui.get_content_region_available()
-            size = (size.x, size.y)
-
-        self.render_window.render(size)
+    def render(self):
+        #if size is None:
+        # get the maximum available size
+        size = imgui.get_content_region_available()
+        size = (size.x, size.y)
+        self.render_window.size = size
+        self.render_window.render()
 
         # adjust the size of this interactor as well
         self.interactor.SetSize(int(size[0]), int(size[1]))
