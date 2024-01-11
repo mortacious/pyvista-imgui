@@ -7,6 +7,7 @@ sphere = pv.Sphere()
 
 
 plotter = ImguiPlotter()
+plotter.enable_pivot_style()
 plotter.add_axes()
 plotter.add_mesh(sphere, render=False)
 
