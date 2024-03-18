@@ -233,6 +233,7 @@ class RendererBackendImguiBundle(RendererBackend):
         runner_params.app_window_params.window_title = title or "ImguiPlotter"
         runner_params.app_window_params.window_geometry.size = window_size
         runner_params.imgui_window_params.show_status_bar = True
+        runner_params.ini_folder_type = hello_imgui.IniFolderType.temp_folder
 
         def gui():
             hello_imgui.apply_theme(hello_imgui.ImGuiTheme_.imgui_colors_dark)

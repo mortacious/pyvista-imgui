@@ -265,7 +265,7 @@ class ImguiPlotter(VTKImguiRenderWindowInteractor, pv.BasePlotter):
         """
         Show this plotter as a standalone imgui application. This call blocks until
         the resulting window is closed again.
-        To integrate within an existing imgui context use render() within 
+        To integrate within an existing imgui context use render_imgui() within 
         the rendering loop.
 
         Parameters
