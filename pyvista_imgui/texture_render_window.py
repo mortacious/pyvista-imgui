@@ -1,5 +1,5 @@
 from vtkmodules.vtkRenderingOpenGL2 import vtkGenericOpenGLRenderWindow, vtkTextureObject
-from vtkmodules.vtkCommonCore import VTK_UNSIGNED_CHAR
+from vtkmodules.vtkCommonCore import VTK_FLOAT
 import typing as typ
 
 
@@ -100,7 +100,7 @@ class VTKOpenGLTextureRenderWindow(object):
             self._tex.SetContext(self.render_window)
 
             # allocate the texture object using the initial size
-            self._tex.Create2D(new_size[0], new_size[1], 4, VTK_UNSIGNED_CHAR, False)
+            self._tex.Create2D(new_size[0], new_size[1], 4, VTK_FLOAT, False)
             self._tex.SetWrapS(vtkTextureObject.ClampToEdge)
             self._tex.SetWrapT(vtkTextureObject.ClampToEdge)
             self._tex.SetMinificationFilter(vtkTextureObject.Linear)
