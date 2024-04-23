@@ -194,7 +194,7 @@ class RendererBackendImguiBundle(RendererBackend):
             return
         io = imgui.get_io()
         io.config_windows_move_from_title_bar_only = True # do not drag the window when clicking on the image
-        viewport_pos = imgui.get_cursor_start_pos()
+        viewport_pos = imgui.get_window_pos()
 
         xpos = int(io.mouse_pos.x - viewport_pos.x)
         ypos = int(io.mouse_pos.y - viewport_pos.y)
